@@ -2,11 +2,13 @@
 import React, {useEffect} from "react";
 import PostCard from "./PostCard";
 import SearchIcon from "@mui/icons-material/Search";
-import {Button, TextField, styled} from "@mui/material";
+import {Button, CircularProgress, TextField, styled} from "@mui/material";
 import {useFormik} from "formik";
 import * as yup from "yup";
 import {useDispatch, useSelector} from "react-redux";
 import {createPost, getAllPosts} from "../../State/Posts/PostSlice";
+import HelperCard from "./HelperCard";
+import {useNavigate} from "react-router-dom";
 
 const NoBorderTextField = styled(TextField)({
   ".css-8ewcdo-MuiInputBase-root-MuiOutlinedInput-root": {
@@ -26,14 +28,23 @@ const NoBorderTextField = styled(TextField)({
 
 const PostFeed = () => {
   const {post} = useSelector((store) => store);
-
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const validationSchema = yup.object().shape({
     content: yup.string().required(),
   });
 
+  const validationSchema2 = yup.object().shape({
+    search: yup.string(),
+  });
+
   const handleSubmit = (values, actions) => {
     dispatch(createPost(values));
+    actions.resetForm();
+  };
+  const handleSubmit2 = (values, actions) => {
+    navigate(`/?search=${values.search}`);
+    dispatch(getAllPosts(values.search));
     actions.resetForm();
   };
 
@@ -45,6 +56,13 @@ const PostFeed = () => {
     onSubmit: handleSubmit,
     validationSchema,
   });
+  const formik2 = useFormik({
+    initialValues: {
+      search: "",
+    },
+    onSubmit: handleSubmit2,
+    validationSchema2,
+  });
 
   useEffect(() => {
     dispatch(getAllPosts());
@@ -52,13 +70,42 @@ const PostFeed = () => {
 
   return (
     <div className="first-line:overscroll-none my-2 space-y-2">
-      <div className="relative flex items-center ">
-        <input type="text" className="py-1 rounded-full bg-gray-200 w-[500px] pl-10 border text-white" placeholder="Search" />
-        <div className="absolute left-0 pl-2">
-          <SearchIcon className="text-gray-500" size="small" />
+      <form onSubmit={formik2.handleSubmit} className="flex justify-between items-center">
+        <div className="relative flex items-center">
+          <input
+            type="text"
+            id="search"
+            name="search"
+            value={formik2.values.search}
+            onChange={formik2.handleChange}
+            onBlur={formik2.handleBlur}
+            className="py-1 rounded-sm bg-black outline-none w-[400px] pl-10 border text-white"
+            placeholder="Search"
+          />
+          <div className="absolute left-0 pl-2">
+            <SearchIcon className="text-gray-500" size="small" />
+          </div>
         </div>
-      </div>
-      <form onSubmit={formik.handleSubmit} className="border p-5 text-white">
+        <Button
+          sx={{
+            width: "",
+            borderRadius: "10px",
+
+            py: "4px",
+            px: "20px",
+            bgcolor: "#9d174d",
+            "&:hover": {
+              backgroundColor: "black",
+            },
+          }}
+          variant="contained"
+          type="submit"
+          className="hover:bg-black "
+        >
+          Search
+        </Button>
+      </form>
+      <form onSubmit={formik.handleSubmit} className="border p-5 text-white max-w-[500px]">
         <div>
           <NoBorderTextField
             id="content"
@@ -104,9 +151,8 @@ const PostFeed = () => {
         </div>
       </form>
       <section className="space-y-4">
-        {post?.posts?.map((item) => (
-          <PostCard item={item} />
-        ))}
+        {post.loading && <CircularProgress />}
+        {post.posts.length > 1 ? post?.posts?.map((item) => <PostCard item={item} />) : <HelperCard />}
       </section>
     </div>
   );

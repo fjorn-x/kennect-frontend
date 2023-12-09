@@ -18,7 +18,7 @@ const PostDetails = ({item}) => {
   }, [post.newPost]);
 
   return (
-    <div>
+    <div className="mt-5">
       <PostCard item={post.post} />
       <Divider>Comments</Divider>
       <div className="space-y-2">

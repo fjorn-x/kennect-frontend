@@ -19,8 +19,14 @@ export const createPost = createAsyncThunk("Post/create", async (PostData, {reje
   }
 });
 
-export const getAllPosts = createAsyncThunk("api/getAllPosts", async (nullData, thunkAPI) => {
+export const getAllPosts = createAsyncThunk("api/getAllPosts", async (Data, thunkAPI) => {
   try {
+    if (Data) {
+      const {data} = await axios.get(`${process.env.REACT_APP_API_URL}/api/posts/?search=${Data}`, {
+        headers: {Authorization: `Bearer ${localStorage.getItem("jwt")}`},
+      });
+      return data;
+    }
     const {data} = await axios.get(`${process.env.REACT_APP_API_URL}/api/posts`, {
       headers: {Authorization: `Bearer ${localStorage.getItem("jwt")}`},
     });
